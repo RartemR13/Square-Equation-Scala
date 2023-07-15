@@ -1,6 +1,22 @@
 import scala.io.StdIn
 import scala.math
 
+def AlmostEqual(firstValue: Double,
+                secondValue: Double,
+                precision: Int = 0): Boolean =
+    
+    if precision < 0 then
+        class PrecisionMustBeGreaterThenZero extends RuntimeException
+        throw PrecisionMustBeGreaterThenZero()
+
+    var ret:Boolean = false
+    if precision == 0 then
+        ret = firstValue == secondValue
+    else
+        val forCompare: Double = math.pow(10, -precision)
+        ret = math.abs(firstValue - secondValue) < forCompare
+    ret
+
 object Greeter:
     def AskCoeffitients() =
         println("Please, write coeffitient as Doubles.")
@@ -152,7 +168,7 @@ extends LinearEquationSolver(coeffitients: LinearEquationCoeffitients):
                 coeffitients.b * coeffitients.b -
                 4 * coeffitients.a * coeffitients.c
             
-            if discriminant == 0 then
+            if AlmostEqual(discriminant, 0, 6) then
                 SetSolution(-coeffitients.b / (2*coeffitients.a))
             else
                 if discriminant > 0 then
@@ -160,7 +176,7 @@ extends LinearEquationSolver(coeffitients: LinearEquationCoeffitients):
                     _secondSolution = (-coeffitients.b - math.sqrt(discriminant)) /
                                       2 * coeffitients.a
 
-                    SetSolution((-coeffitients.b - math.sqrt(discriminant)) /
+                    SetSolution((-coeffitients.b + math.sqrt(discriminant)) /
                                 2 * coeffitients.a)
     end Solve
 
