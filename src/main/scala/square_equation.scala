@@ -1,4 +1,5 @@
 import scala.io.StdIn
+import scala.math
 
 object Greeter:
     def AskCoeffitients() =
@@ -91,12 +92,17 @@ val GetSquareEquationCoeffitient = () =>
 end GetSquareEquationCoeffitient
 
 class LinearEquationSolver(coeffitients: LinearEquationCoeffitients):
-    private var _hasSolution: Boolean = false
+    protected var _hasSolution: Boolean = false
     private var _hasInfinityCountSolutions: Boolean = false
     private var _solution: Double = 0
 
     class LinearEquationHasNoSolutions extends RuntimeException
     class LinearEquationHasInfinityCountSolutions extends RuntimeException
+
+    protected def SetSolution(solution: Double) =
+        _solution = solution
+        _hasSolution = true
+    
 
     def Solve(): Unit = 
         if coeffitients == LinearEquationCoeffitients(0, 0) then
@@ -121,34 +127,76 @@ class LinearEquationSolver(coeffitients: LinearEquationCoeffitients):
     
     def HasInfinityCountSolutions(): Boolean =
         _hasInfinityCountSolutions
+end LinearEquationSolver
 
 class SquareEquationSolver(coeffitients: SquareEquationCoeffitients) 
 extends LinearEquationSolver(coeffitients: LinearEquationCoeffitients):
     private var _hasSecondSolution:Boolean = false
-    private var _secondSolution = 0
+    private var _secondSolution:Double = 0
+
+    class LinearEquationSolverUnsupportedMethod extends RuntimeException
     
-    private def GetSolution() = 0
+    override def GetSolution():Double = 
+        throw LinearEquationSolverUnsupportedMethod()
+        0.0
+    
+    override def HasSolution(): Boolean = 
+        throw LinearEquationSolverUnsupportedMethod()
+        false
 
     override def Solve(): Unit =
         if coeffitients.a == 0 then
             super.Solve()
         else
-            var disctiminant = 
+            var discriminant = 
                 coeffitients.b * coeffitients.b -
                 4 * coeffitients.a * coeffitients.c
             
-            if disctiminant == 0 then
-                super._hasSolution = true
+            if discriminant == 0 then
+                SetSolution(-coeffitients.b / (2*coeffitients.a))
+            else
+                if discriminant > 0 then
+                    _hasSecondSolution = true
+                    _secondSolution = (-coeffitients.b - math.sqrt(discriminant)) /
+                                      2 * coeffitients.a
 
-                
-                
+                    SetSolution((-coeffitients.b - math.sqrt(discriminant)) /
+                                2 * coeffitients.a)
+    end Solve
 
+    class SquareEquationHasNoFirstSolution extends RuntimeException
+    class SquareEquationHasNoSecondSolution extends RuntimeException
+
+    def GetFirstSolution():Double =
+        if !super.HasSolution() then
+            throw SquareEquationHasNoFirstSolution()
+        super.GetSolution()
+
+    def GetSecondSolution():Double =
+        if !_hasSecondSolution then
+            throw SquareEquationHasNoSecondSolution()
+        _secondSolution
+
+    def HasFirstSolution():Boolean = 
+        super.HasSolution()
+
+    def HasSecondSolution():Boolean =
+        _hasSecondSolution
 end SquareEquationSolver
 
 @main def main() =
-    var coeffitients = GetSquareEquationCoeffitient()
-    var solver = LinearEquationSolver(coeffitients)
+    val coeffitients = GetSquareEquationCoeffitient()
+    var solver = SquareEquationSolver(coeffitients)
     solver.Solve()
 
-    println(solver.GetSolution())
+    if solver.HasFirstSolution() || solver.HasSecondSolution() then
+        println("Ok, I think i have solution! Look...")
+        if solver.HasFirstSolution() then
+            println(solver.GetFirstSolution())
+            if solver.HasSecondSolution() then
+                println(solver.GetSecondSolution())
+        else
+            println("All of you want")
+    else
+        println("I think this square equation has no solutions")
     
