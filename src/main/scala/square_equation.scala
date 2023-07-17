@@ -1,3 +1,5 @@
+package  square_equation_scala
+
 import scala.io.StdIn
 import scala.math
 
