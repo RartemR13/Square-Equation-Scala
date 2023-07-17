@@ -2,6 +2,10 @@ package  square_equation_scala
 
 import scala.io.StdIn
 import scala.math
+import io.circe._
+import io.circe.generic.auto._
+import io.circe.syntax._
+import io.circe.parser._
 
 def AlmostEqual(firstValue: Double,
                 secondValue: Double,
@@ -20,17 +24,83 @@ def AlmostEqual(firstValue: Double,
     ret
 
 object Greeter:
+    import io.circe.yaml.parser
+    // val s:Json = Json()
+
+    val config = getClass.getClassLoader.getResourceAsStream("config.yaml")
+    val configJsonEither = parser.parse(java.io.InputStreamReader(config))
+
+    class YAMLConfigParsingFailure extends RuntimeException
+    if configJsonEither.isLeft then
+        throw YAMLConfigParsingFailure()
+
+    val phrasesJson:io.circe.Json = configJsonEither match
+        case Right(value) =>
+            value
+        case Left(value) =>
+            value.message.asJson
+
+    class Phrases:
+        var first: String = ""
+        var second: String = ""
+        var third: String = ""
+        var fourth: String = ""
+
+        def this(first:String, second:String, third:String, fourth:String) =
+            this()
+
+            this.first = first
+            this.second = second
+            this.third = third
+            this.fourth = fourth   
+    end Phrases
+
+    class PhrasesBlocks:
+        var greeter: Phrases = Phrases()
+
+        def this(greeter:Phrases) = 
+            this()
+
+            this.greeter = greeter
+    end PhrasesBlocks
+
+    implicit val phrasesDecoder:Decoder[Phrases] = phrasesCursor =>
+        for
+            first  <- phrasesCursor.get[String]("for_get_coeffitients")
+            second <- phrasesCursor.get[String]("for_get_first_coeffitient")
+            third  <- phrasesCursor.get[String]("for_get_second_coeffitient")
+            fourth <- phrasesCursor.get[String]("for_get_third_coeffitient")
+        yield
+            Phrases(first, second, third, fourth)
+
+    implicit  val phrasesBlockDecoder:Decoder[PhrasesBlocks] = phrasesBlockCursor =>
+        for
+            greeter <- phrasesBlockCursor.get[Phrases]("greeter")
+        yield
+            PhrasesBlocks(greeter)
+
+    val phrasesBlocksEither = phrasesJson.as[PhrasesBlocks]
+
+    if phrasesBlocksEither.isLeft then
+        throw YAMLConfigParsingFailure()
+
+    val phrasesBlocks: PhrasesBlocks = phrasesBlocksEither match
+        case Right(value) =>
+            value
+        case Left(value) =>
+            PhrasesBlocks()
+    
     def AskCoeffitients() =
-        println("Please, write coeffitient as Doubles.")
+        println(phrasesBlocks.greeter.first)
 
     def AskCoeffitientA() =
-        println("Ok, now write first coeffitient: ")
+        println(phrasesBlocks.greeter.second)
 
     def AskCoeffitientB() =
-        println("Yep, next, second: ")
+        println(phrasesBlocks.greeter.third)
 
     def AskCoeffitientC() =
-        println("At last, free member: ")
+        println(phrasesBlocks.greeter.fourth)
 end Greeter
 
 class LinearEquationCoeffitients:

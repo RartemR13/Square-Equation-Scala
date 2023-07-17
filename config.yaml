@@ -1,0 +1,5 @@
+greeter:
+  for_get_coeffitients: "Hello world"
+  for_get_first_coeffitient: "Ok, now write first coeffitient: "
+  for_get_second_coeffitient: "Yep, next, second: "
+  for_get_third_coeffitient: "At last, free member: "
